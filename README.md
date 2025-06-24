@@ -4,8 +4,11 @@ This is the Mcity-adapted version of Autoware Universe, based on the October 202
 
 
 ## Prerequisites
-Follow the official instructions to install [ROS Humble Desktop](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html).
 
+- __Hardware__: CPU with at least 16 cores and a dedicated GPU with at least 4 GB of memory.
+- __System__: Ubuntu 22.04 (For optimal performance and stability, we recommend installing on a **dedicated machine** rather than a virtual machine or Windows Subsystem for Linux).
+
+- __Software__: Follow the official instructions to install [ROS Humble Desktop](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html).
 
 ## Installation
 
