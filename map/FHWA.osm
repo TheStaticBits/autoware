@@ -5811,7 +5811,6 @@
     <tag k="from_cad_id" v="[]"/>
     <tag k="direction" v="ONE_WAY"/>
     <tag k="level" v="0"/>
-    <tag k="location" v="private"/>
     <tag k="near_spaces" v="[]"/>
     <tag k="participant:vehicle" v="yes"/>
     <tag k="to_cad_id" v="[]"/>
@@ -5827,7 +5826,6 @@
     <tag k="from_cad_id" v="[]"/>
     <tag k="direction" v="ONE_WAY"/>
     <tag k="level" v="0"/>
-    <tag k="location" v="private"/>
     <tag k="near_spaces" v="[]"/>
     <tag k="participant:vehicle" v="yes"/>
     <tag k="to_cad_id" v="[]"/>
@@ -5843,7 +5841,7 @@
     <tag k="from_cad_id" v="[]"/>
     <tag k="direction" v="ONE_WAY"/>
     <tag k="level" v="0"/>
-    <tag k="location" v="private"/>
+
     <tag k="near_spaces" v="[]"/>
     <tag k="participant:vehicle" v="yes"/>
     <tag k="to_cad_id" v="[]"/>
@@ -5859,7 +5857,7 @@
     <tag k="from_cad_id" v="[]"/>
     <tag k="direction" v="ONE_WAY"/>
     <tag k="level" v="0"/>
-    <tag k="location" v="private"/>
+
     <tag k="near_spaces" v="[]"/>
     <tag k="participant:vehicle" v="yes"/>
     <tag k="to_cad_id" v="[]"/>
