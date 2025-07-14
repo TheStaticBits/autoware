@@ -73,7 +73,9 @@ echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
 
 
 ## Launch Autoware
-To launch the simulation:
+
+### Autoware Planning Simulator
+
 ```bash
 ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware/map vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit lanelet2_map_file:=lanelet2_mcity_v43.osm
 ```
@@ -82,10 +84,19 @@ To run a quick startup demonstration, first initialize the ego vehicle's state b
 
 ![tutorial](figure/startup_tutorial.gif)
 
-To launch the real vehicle (this component is intended to run in a closed-loop setup with an actual Mcity vehicle; a CARLA co-simulation version will be released in the future):
+### Autoware Real-Car Stack
+
 ```bash
 ros2 launch autoware_launch autoware.launch.xml map_path:=$HOME/autoware/map vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit lanelet2_map_file:=lanelet2_mcity_v43.osm
 ```
+
+This section is intended for deployment on a real autonomous vehicle with a full sensor suite at the Mcity Testing Track. For those interested in operating the real vehicle for research purposes, please see our [Mcity 2.0 Project](https://mcity.umich.edu/what-we-do/mcity-test-facility/remote-access/).
+
+![mcity](figure/mcity.jpg)
+
+**Alternatively, we provide a co-simulation interface that enables the Autoware real-car stack to run with the high-fidelity physics simulator CARLA through the Mcity Digital Twin**. Detailed instructions are available in the repository [Mcity2.0-API for AV Motion Planning](https://github.com/michigan-traffic-lab/Mcity-2.0-API-for-AV-motion-planning).
+
+![cosim](figure/carla_cosim.gif)
 
 To Replay a rosbag:
 ```bash
