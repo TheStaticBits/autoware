@@ -90,7 +90,7 @@ To run a quick startup demonstration, first initialize the ego vehicle's state b
 ros2 launch autoware_launch autoware.launch.xml map_path:=$HOME/autoware/map vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit lanelet2_map_file:=lanelet2_mcity_v43.osm
 ```
 
-This section is intended for deployment on a real autonomous vehicle with a full sensor suite at the Mcity Testing Track. For those interested in operating the real vehicle for research purposes, please see our [Mcity 2.0 Project](https://mcity.umich.edu/what-we-do/mcity-test-facility/remote-access/).
+**This section is intended for deployment on a real autonomous vehicle with a full sensor suite at the Mcity Testing Track**. For those interested in operating the real vehicle for research purposes, please see our [Mcity 2.0 Project](https://mcity.umich.edu/what-we-do/mcity-test-facility/remote-access/).
 
 ![mcity](figure/mcity.jpg)
 
