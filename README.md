@@ -96,7 +96,8 @@ This section is intended for deployment on a real autonomous vehicle with a full
 
 **Alternatively, we provide a co-simulation interface that enables the Autoware real-car stack to run with the high-fidelity physics simulator CARLA through the Mcity Digital Twin**. Detailed instructions are available in the repository [Mcity2.0-API for AV Motion Planning](https://github.com/michigan-traffic-lab/Mcity-2.0-API-for-AV-motion-planning).
 
-![cosim](figure/carla_cosim.gif)
+![cosim](figure/carla.gif)
+![cosim](figure/autoware.gif)
 
 To Replay a rosbag:
 ```bash
