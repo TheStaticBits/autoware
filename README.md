@@ -99,7 +99,7 @@ This section is intended for deployment on a real autonomous vehicle with a full
 ![cosim](figure/carla.gif)
 ![cosim](figure/autoware.gif)
 
-To Replay a rosbag:
+### Autoware ROS Bag Replay
 ```bash
 ros2 launch autoware_launch logging_simulator.launch.xml map_path:=$HOME/autoware/map vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit lanelet2_map_file:=lanelet2_mcity_v43.osm
 ```
