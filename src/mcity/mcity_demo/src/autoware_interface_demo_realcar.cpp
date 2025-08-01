@@ -19,9 +19,6 @@ namespace autoware_interface_demo_realcar{
   AutowareInterfaceDemoRealcar::AutowareInterfaceDemoRealcar(const rclcpp::NodeOptions & options)
   : Node("autoware_interface_demo_realcar", options)
   {
-    pub_vel_report = this->create_publisher<VelocityReport>("/vehicle/status/velocity_status", 10);
-    pub_steer_report = this->create_publisher<SteeringReport>("/vehicle/status/steering_status", 10);
-
     sub_autoware_state = this->create_subscription<AutowareState>(
       "/autoware/state", 10, std::bind(&AutowareInterfaceDemoRealcar::autowareStateCB, this, std::placeholders::_1));
     sub_veh_state = this->create_subscription<VehicleState>(
@@ -56,22 +53,6 @@ namespace autoware_interface_demo_realcar{
         set_operation_mode(ChangeOperationMode::Request::AUTONOMOUS);
       }
     }
-
-    pub_vehicle_report();
-  }
-
-  void AutowareInterfaceDemoRealcar::pub_vehicle_report(){
-    VelocityReport vel_report_msg;
-    SteeringReport steer_report_msg;
-
-    vel_report_msg.header.stamp = this->get_clock()->now();
-    vel_report_msg.longitudinal_velocity = veh_state_msg.speed_x;
-
-    steer_report_msg.stamp = this->get_clock()->now();
-    steer_report_msg.steering_tire_angle = veh_state_msg.steer_state / STEER_TO_TIRE_RATIO;
-
-    pub_vel_report->publish(vel_report_msg);
-    pub_steer_report->publish(steer_report_msg);
   }
 
   void AutowareInterfaceDemoRealcar::set_route_points(){
