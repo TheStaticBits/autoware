@@ -5,12 +5,19 @@ This is the Mcity-adapted version of Autoware Universe, based on the October 202
 
 ## Prerequisites
 
-- __Hardware__: CPU with at least 16 cores and a dedicated GPU with at least 4 GB of memory.
-- __System__: Ubuntu 22.04 (For optimal performance and stability, we recommend installing on a **dedicated machine** rather than a virtual machine or Windows Subsystem for Linux).
+- __Hardware__: A CPU based on Intel x86 architecture with at least 16 cores, at least 16 GB of system memory, and a dedicated GPU with at least 8 GB of VRAM.
+
+- __System__: Ubuntu 22.04 (native system installation rather than a virtual machine or Windows Subsystem for Linux)
 
 - __Software__: Follow the official instructions to install [ROS Humble Desktop](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html).
 
 ## Installation
+
+### Install required system dependencies
+
+```bash
+sudo apt-get install libhiredis-dev libgeographic-dev ccache python3-rosdep2 python3-colcon-common-extensions ros-humble-rmw-cyclonedds-cpp
+```
 
 ### Clone the repository
 
@@ -22,12 +29,6 @@ git clone https://github.com/michigan-traffic-lab/autoware.git
 
 ```bash
 cd autoware
-```
-
-### Install required system dependencies
-
-```bash
-sudo apt-get install libhiredis-dev libgeographic-dev ccache python3-rosdep2 python3-colcon-common-extensions ros-humble-rmw-cyclonedds-cpp
 ```
 
 ### Source the ROS distribution
@@ -74,15 +75,19 @@ echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
 
 ## Launch Autoware
 
-### Autoware Planning Simulator
+### Planning Simulator
 
 ```bash
 ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware/map vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit lanelet2_map_file:=lanelet2_mcity_v43.osm
 ```
 
-To run a quick startup demonstration, first initialize the ego vehicle's state by selecting **"2D Pose Estimate"** at the top of the RViz panel, then set the destination using **"2D Goal Pose"**. Finally, click **"Auto"** on the Operation Mode panel to start the vehicle. If Autoware consistently fails to plan a trajectory, See [Troubleshooting](#Troubleshooting) for a potential fix.
+To run a quick startup demonstration, first initialize the ego vehicle's state by selecting **"2D Pose Estimate"** at the top of the RViz panel, then set the destination using **"2D Goal Pose"**. Finally, click **"Auto"** on the Operation Mode panel to start the vehicle. If Autoware consistently fails to plan a trajectory, See [**Troubleshooting**](#Troubleshooting) for a potential fix.
 
 ![tutorial](figure/startup_tutorial.gif)
+
+Alternatively, to automate the pose initialization, goal selection, and engagement process when launching the Autoware stack, run the provided Mcity route script. The source code is available at `src/mcity/mcity_route` and can be customized as needed.
+
+![route](figure/route.gif)
 
 ### Autoware Real-Car Stack
 
@@ -90,11 +95,7 @@ To run a quick startup demonstration, first initialize the ego vehicle's state b
 ros2 launch autoware_launch autoware.launch.xml map_path:=$HOME/autoware/map vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit lanelet2_map_file:=lanelet2_mcity_v43.osm
 ```
 
-**This section is intended for deployment on a real autonomous vehicle with a full sensor suite at the Mcity Testing Track**. For those interested in operating the real vehicle for research purposes, please see our [Mcity 2.0 Project](https://mcity.umich.edu/what-we-do/mcity-test-facility/remote-access/).
-
-![mcity](figure/mcity.jpg)
-
-**Alternatively, we provide a co-simulation interface that enables the Autoware real-car stack to run with the high-fidelity physics simulator CARLA through the Mcity Digital Twin**. Detailed instructions are available in the repository [Mcity2.0-API for AV Motion Planning](https://github.com/michigan-traffic-lab/Mcity-2.0-API-for-AV-motion-planning).
+We provide a co-simulation interface that integrates the Autoware real-car stack with the high-fidelity CARLA simulator and the traffic generation platform TeraSim. For detailed setup and usage instructions, refer to the [**Terasim**](https://github.com/michigan-traffic-lab/TeraSim) repository.
 
 ![cosim](figure/carla.gif)
 ![cosim](figure/autoware.gif)

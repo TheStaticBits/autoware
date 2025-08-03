@@ -28,17 +28,11 @@ class AutowareVehiclePlugin(Node):
     def __init__(self):
         super().__init__("autoware_vehicle_plugin")
 
-        self.declare_parameter("control_cav", False)
+        self.declare_parameter("control_cav", True)
         self.declare_parameter("cosim_controlled_vehicle_keys", [TERASIM_ACTOR_INFO])
 
-        self.control_cav = (
-            self.get_parameter("control_cav").get_parameter_value().bool_value
-        )
-        self.cosim_controlled_vehicle_keys = (
-            self.get_parameter("cosim_controlled_vehicle_keys")
-            .get_parameter_value()
-            .string_array_value
-        )
+        self.control_cav = self.get_parameter("control_cav").value
+        self.cosim_controlled_vehicle_keys = self.get_parameter("cosim_controlled_vehicle_keys").value
 
         # autoware cav localization and display
         self.pub_pose = self.create_publisher(
