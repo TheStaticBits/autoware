@@ -1,6 +1,6 @@
 # Autoware
 
-This is the Mcity-adapted version of Autoware Universe, based on the October 2023 release and extensively modified. If you are looking for the most up-to-date Autoware Universe, please check out the official [Documentation](https://autowarefoundation.github.io/autoware-documentation/main/).
+This is the Mcity-adapted version of Autoware Universe, based on the October 2023 release and extensively modified. If you are looking for the most up-to-date Autoware Universe, please check out the official [**Documentation**](https://autowarefoundation.github.io/autoware-documentation/main/).
 
 
 ## Prerequisites
@@ -9,11 +9,11 @@ This is the Mcity-adapted version of Autoware Universe, based on the October 202
 
 - __System__: Ubuntu 22.04 (native system installation rather than a virtual machine or Windows Subsystem for Linux)
 
-- __Software__: Follow the official instructions to install [ROS Humble Desktop](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html).
+- __Software__: Follow the official instructions to install [**ROS Humble Desktop**](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html).
 
 ## Installation
 
-### Install required system dependencies
+### Install dependencies
 
 ```bash
 sudo apt-get install libhiredis-dev libgeographic-dev ccache python3-rosdep2 python3-colcon-common-extensions ros-humble-rmw-cyclonedds-cpp
@@ -73,7 +73,7 @@ echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
 ```
 
 
-## Launch Autoware
+## Run Autoware
 
 ### Planning Simulator
 
@@ -89,7 +89,7 @@ Alternatively, to automate the pose initialization, goal selection, and engageme
 
 ![route](figure/route.gif)
 
-### Autoware Real-Car Stack
+### Real-Car Stack
 
 ```bash
 ros2 launch autoware_launch autoware.launch.xml map_path:=$HOME/autoware/map vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit lanelet2_map_file:=lanelet2_mcity_v43.osm
