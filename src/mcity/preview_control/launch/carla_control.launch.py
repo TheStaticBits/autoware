@@ -15,7 +15,7 @@ def generate_launch_description():
                         "gain_folder": PathJoinSubstitution(
                             [
                                 EnvironmentVariable("HOME"),
-                                "terasim/Mcity-2.0-API-for-AV-motion-planning/ros2_ws/src/preview_control/data/gain/withoutdelay/",
+                                "autoware/src/mcity/preview_control/data/gain/withoutdelay/",
                             ]
                         )
                     },
@@ -23,7 +23,7 @@ def generate_launch_description():
                         "slope_folder": PathJoinSubstitution(
                             [
                                 EnvironmentVariable("HOME"),
-                                "terasim/Mcity-2.0-API-for-AV-motion-planning/ros2_ws/src/preview_control/data/slope/DIT.txt",
+                                "autoware/src/mcity/preview_control/data/slope/DIT.txt",
                             ]
                         )
                     },

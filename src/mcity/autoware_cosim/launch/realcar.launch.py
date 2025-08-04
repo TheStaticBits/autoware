@@ -11,7 +11,7 @@ def generate_launch_description():
         name='autoware_vehicle_plugin',
         output='screen',
         parameters=[{
-            'control_cav': True,
+            'control_cav': False,
             'cosim_controlled_vehicle_keys': ['terasim_actor_info'],
         }]
     )
