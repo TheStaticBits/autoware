@@ -97,8 +97,7 @@ ros2 launch autoware_launch autoware.launch.xml map_path:=$HOME/autoware/map veh
 
 We provide a co-simulation interface that integrates the Autoware real-car stack with the high-fidelity CARLA simulator and the traffic generation platform TeraSim. For detailed setup and usage instructions, refer to the [**Terasim**](https://github.com/michigan-traffic-lab/TeraSim) repository.
 
-![cosim](figure/carla.gif)
-![cosim](figure/autoware.gif)
+![cosim](figure/fullstack.gif)
 
 ### Autoware ROS Bag Replay
 ```bash
