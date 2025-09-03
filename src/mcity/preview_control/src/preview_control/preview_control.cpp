@@ -6,7 +6,6 @@ namespace preview_control
         : Node("preview_control", options)
     {
         this->declare_parameter("gain_folder", "");
-        this->declare_parameter("slope_folder", "");
         this->declare_parameter("max_ey", 0.0);
         this->declare_parameter("max_ephi", 0.0);
         this->declare_parameter("max_curvature", 0.0);
@@ -15,13 +14,10 @@ namespace preview_control
         this->declare_parameter("heading_offset", 0.0);
         this->declare_parameter("heading_lookahead_points", 0);
         this->declare_parameter("lateral_offset", 0.0);
-        this->declare_parameter("preview_time", 0.0);
-        this->declare_parameter("desired_time_resolution", 0.0);
         this->declare_parameter("trajectory_abort_size", 0);
         this->declare_parameter("trajectory_loose_abort_size", 0);
 
         this->get_parameter("gain_folder", gain_folder);
-        this->get_parameter("slope_folder", slope_folder);
         this->get_parameter("max_ey", max_ey);
         this->get_parameter("max_ephi", max_ephi);
         this->get_parameter("max_curvature", max_curvature);
@@ -30,8 +26,6 @@ namespace preview_control
         this->get_parameter("heading_offset", heading_offset);
         this->get_parameter("heading_lookahead_points", heading_lookahead_points);
         this->get_parameter("lateral_offset", lateral_offset);
-        this->get_parameter("preview_time", preview_time);
-        this->get_parameter("desired_time_resolution", desired_time_resolution);
         this->get_parameter("trajectory_abort_size", trajectory_abort_size);
         this->get_parameter("trajectory_loose_abort_size", trajectory_loose_abort_size);
 
@@ -67,8 +61,7 @@ namespace preview_control
             max_ephi,
             heading_offset,
             heading_lookahead_points,
-            lateral_offset,
-            slope_folder);
+            lateral_offset);
 
         pathFollow.init(_p2c, _vs, _ctrl, gain_folder, max_ey, max_ephi);
         speedCtrl.ini(_p2c, _vs, _ctrl, speed_ctrl_kp, speed_ctrl_ki, FREQ);
@@ -88,8 +81,7 @@ namespace preview_control
 
     void PreviewControl::on_timer(){
         // step 1: check whether to stop
-        if (p2c.go == 0)
-        {
+        if (p2c.go == 0){
             speedCtrl.set_stop();
             RCLCPP_INFO_THROTTLE(rclcpp::get_logger("rclcpp"), *get_clock(), 1000, "Decision go = 0, set stop");
             publishCmd();
@@ -97,8 +89,7 @@ namespace preview_control
         }
 
         // no planning result received
-        if (this->get_clock()->now().seconds() - p2c.timestamp > 1.0)
-        {
+        if (this->get_clock()->now().seconds() - p2c.timestamp > 1.0){
             speedCtrl.set_stop();
             RCLCPP_INFO_THROTTLE(rclcpp::get_logger("rclcpp"), *get_clock(), 1000, "NOT able to recv decision result, set stop");
             publishCmd();
@@ -106,8 +97,7 @@ namespace preview_control
         }
 
         // received trajectory too short
-        if (static_cast<int>(_p2c->x_vector.size()) < trajectory_abort_size)
-        {
+        if (static_cast<int>(_p2c->x_vector.size()) < trajectory_abort_size){
             speedCtrl.set_stop();
             RCLCPP_WARN_THROTTLE(rclcpp::get_logger("rclcpp"), *get_clock(), 1000, "Received trajectory too short, set stop");
             publishCmd();
@@ -115,22 +105,17 @@ namespace preview_control
         }
 
         // we still have some trajectory left but vehicle is already stopped
-        if (static_cast<int>(_p2c->x_vector.size()) < trajectory_loose_abort_size && _vs->speed_x == 0.0)
-        {
-            if (stop_count > 100)
-            {
+        if (static_cast<int>(_p2c->x_vector.size()) < trajectory_loose_abort_size && _vs->speed_x == 0.0){
+            if (stop_count > 100){
                 speedCtrl.set_stop();
                 RCLCPP_WARN_THROTTLE(rclcpp::get_logger("rclcpp"), *get_clock(), 1000, "early stop, shift gear to park");
                 publishCmd();
                 return;
-            }
-            else
-            {
+            } else{
                 stop_count++;
             }
         }
-        else
-        {
+        else{
             stop_count = 0;
         }
 
@@ -205,7 +190,7 @@ namespace preview_control
         for (auto i = 0; i < int(msg->ori_vector.size()); ++i)
             _p2c->ori_vector.push_back(msg->ori_vector.at(i));
 
-        pathProcess.process_path(desired_time_resolution, preview_time);
+        pathProcess.resampling();
     }
 }
 

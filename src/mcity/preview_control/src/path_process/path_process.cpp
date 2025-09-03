@@ -8,8 +8,7 @@ void pathProcessing::init(
     double max_allowed_curvature_,
     double heading_offset_,
     int heading_lookahead_points_,
-    double lateral_offset_,
-    string slope_folder){
+    double lateral_offset_){
 
     _p2c = planning2control_msg;
     _vs = vehicle_state;
@@ -20,37 +19,6 @@ void pathProcessing::init(
     heading_offset = heading_offset_;
     heading_lookahead_points = heading_lookahead_points_;
     lateral_offset = lateral_offset_;
-
-    load_slope(slope_folder);
-}
-
-void pathProcessing::load_slope(string slope_folder){
-    std::ifstream file(slope_folder);
-    std::string line;
-
-    if (file.is_open()) {
-        while (getline(file, line)) {
-            std::istringstream iss(line);
-            char dummy1, dummy2, dummy3; // To ignore the characters '(', ')' and ','
-            int x, y;
-            double slope;
-            if (!(iss >> dummy1 >> x >> dummy2 >> y >> dummy3 >> dummy3 >> slope)) {
-                std::cerr << "Error parsing line: " << line << std::endl;
-                continue; // Skip malformed lines
-            }
-            // Store the data
-            slope_data[std::make_pair(x, y)] = slope;
-        }
-        RCLCPP_INFO(rclcpp::get_logger("path_process"), "Suceessfully loaded slope data.");
-        file.close();
-    } else {
-        RCLCPP_ERROR(rclcpp::get_logger("path_process"), "Unable to open slope data file");
-    }
-}
-
-void pathProcessing::process_path(double desired_time_resolution, double preview_time){
-    // upsampling(desired_time_resolution);
-    downsampling(preview_time, desired_time_resolution);
 }
 
 void pathProcessing::run(){
@@ -60,7 +28,6 @@ void pathProcessing::run(){
     _p2c->vd = get_desired_velocity(closest_index);
     _p2c->ephi = get_orientation_error(closest_index);
     _p2c->ey = get_lateral_error(closest_index);
-    _p2c->slope = get_slope(closest_index);
 
     RCLCPP_INFO(rclcpp::get_logger("path_process"), "remaining length %d", size);
     RCLCPP_INFO(rclcpp::get_logger("path_process"), "index %d", closest_index);
@@ -68,7 +35,6 @@ void pathProcessing::run(){
     RCLCPP_INFO(rclcpp::get_logger("path_process"), "vc %f", _vs->speed_x);
     RCLCPP_INFO(rclcpp::get_logger("path_process"), "ephi %f", _p2c->ephi);
     RCLCPP_INFO(rclcpp::get_logger("path_process"), "ey %f", _p2c->ey);
-    // RCLCPP_INFO(rclcpp::get_logger("path_process"), "slope %f ", _p2c->slope);
 }
 
 int pathProcessing::get_closest_index(){
@@ -91,82 +57,80 @@ int pathProcessing::get_closest_index(){
         }
     }
 
-    return closest_index;
+    // To account for the localization difference between mkz and autoware
+    return closest_index - 10;
 }
 
-void pathProcessing::upsampling(double desired_time_resolution){
-    // mupltiply by 2 to make sure the upsampled vectors have accurate info
-    double upscale_factor = _p2c->time_resolution / desired_time_resolution * 2.0;
+void pathProcessing::resampling() {
+    std::vector<float> resampled_x, resampled_y, resampled_vd, resampled_ori;
 
-    std::vector<float> upsampled_x_vec;
-    std::vector<float> upsampled_y_vec;
-    std::vector<float> upsampled_vd_vec;
-    std::vector<float> upsampled_ori_vec;
+    double desired_spacing = 0.1;  // fixed resampling distance
+    double dist_since_last = 0.0;  // distance traveled since last resampled point
 
-    for (size_t i = 0; i < _p2c->x_vector.size() - 1; ++i) {
-        double delta_x = (_p2c->x_vector[i + 1] - _p2c->x_vector[i]) / upscale_factor;
-        double delta_y = (_p2c->y_vector[i + 1] - _p2c->y_vector[i]) / upscale_factor;
-        double delta_vd = (_p2c->vd_vector[i + 1] - _p2c->vd_vector[i]) / upscale_factor;
-        double delta_ori = (_p2c->ori_vector[i + 1] - _p2c->ori_vector[i]) / upscale_factor;
-
-        for (int j = 0; j < int(upscale_factor); ++j) {
-            double interpolated_x_value = _p2c->x_vector[i] + delta_x * j;
-            double interpolated_y_value = _p2c->y_vector[i] + delta_y * j;
-            double interpolated_vd_value = _p2c->vd_vector[i] + delta_vd * j;
-            double interpolated_ori_value = _p2c->ori_vector[i] + delta_ori * j;
-
-            upsampled_x_vec.push_back(interpolated_x_value);
-            upsampled_y_vec.push_back(interpolated_y_value);
-            upsampled_vd_vec.push_back(interpolated_vd_value);
-            upsampled_ori_vec.push_back(interpolated_ori_value);
-        }
-    }
-
-    _p2c->x_vector = upsampled_x_vec;
-    _p2c->y_vector = upsampled_y_vec;
-    _p2c->vd_vector = upsampled_vd_vec;
-    _p2c->ori_vector = upsampled_ori_vec;
-}
-
-void pathProcessing::downsampling(double preview_time, double desired_time_resolution){
-    std::vector<float> downsampled_x_vec;
-    std::vector<float> downsampled_y_vec;
-    std::vector<float> downsampled_vd_vec;
-    std::vector<float> downsampled_ori_vec;
-
-    double accumulated_time = 0.0;
+    // Always include the very first waypoint
+    resampled_x.push_back(_p2c->x_vector[0]);
+    resampled_y.push_back(_p2c->y_vector[0]);
+    resampled_vd.push_back(_p2c->vd_vector[0]);
+    resampled_ori.push_back(_p2c->ori_vector[0]);
 
     for (size_t i = 0; i < _p2c->x_vector.size() - 1; i++) {
-        // Calculate the distance to the next point
-        double dx = _p2c->x_vector[i+1] - _p2c->x_vector[i];
-        double dy = _p2c->y_vector[i+1] - _p2c->y_vector[i];
-        double dist = std::sqrt(dx * dx + dy * dy);
+        double x0 = _p2c->x_vector[i];
+        double y0 = _p2c->y_vector[i];
+        double vd0 = _p2c->vd_vector[i];
+        double ori0 = _p2c->ori_vector[i];
 
-        float vd = max(1.5, (double)_p2c->vd_vector[i]);
-        accumulated_time += dist / vd;
-        
-        if (accumulated_time >= desired_time_resolution) {
-            // This point should be included in the downsampled vectors
-            downsampled_x_vec.push_back(_p2c->x_vector[i]);
-            downsampled_y_vec.push_back(_p2c->y_vector[i]);
-            downsampled_vd_vec.push_back(_p2c->vd_vector[i]);
-            downsampled_ori_vec.push_back(_p2c->ori_vector[i]);
+        double x1 = _p2c->x_vector[i + 1];
+        double y1 = _p2c->y_vector[i + 1];
+        double vd1 = _p2c->vd_vector[i + 1];
+        double ori1 = _p2c->ori_vector[i + 1];
 
-            // Reset accumulated time
-            accumulated_time = 0.0;
+        double dx = x1 - x0;
+        double dy = y1 - y0;
+        double seg_len = std::sqrt(dx * dx + dy * dy);
+
+        double seg_travel = 0.0;  // how far we’ve walked in this segment
+
+        while (dist_since_last + seg_len - seg_travel >= desired_spacing) {
+            // we can fit another resampled point inside this segment
+            double remain = desired_spacing - dist_since_last;
+            double ratio = (seg_travel + remain) / seg_len;
+
+            double new_x = x0 + ratio * dx;
+            double new_y = y0 + ratio * dy;
+            double new_vd = vd0 + ratio * (vd1 - vd0);
+            double new_ori = ori0 + ratio * (ori1 - ori0);
+
+            resampled_x.push_back(new_x);
+            resampled_y.push_back(new_y);
+            resampled_vd.push_back(new_vd);
+            resampled_ori.push_back(new_ori);
+
+            seg_travel += remain;      // move forward in this segment
+            dist_since_last = 0.0;     // reset spacing counter
+            x0 = new_x;                // shift starting point
+            y0 = new_y;
+            vd0 = new_vd;
+            ori0 = new_ori;
+            dx = x1 - x0;
+            dy = y1 - y0;
+            seg_len = std::sqrt(dx * dx + dy * dy);
         }
 
-        // Break if we have enough points for preview
-        if ((int)downsampled_x_vec.size() >= preview_time / desired_time_resolution){
-            break;
-        }
+        // Whatever distance is left at the end of this segment
+        dist_since_last += seg_len - seg_travel;
     }
 
-    // assign the value of downsampled vectors to l vectors
-    _p2c->x_vector = downsampled_x_vec;
-    _p2c->y_vector = downsampled_y_vec;
-    _p2c->vd_vector = downsampled_vd_vec;
-    _p2c->ori_vector = downsampled_ori_vec;
+    // Always include the last waypoint
+    resampled_x.push_back(_p2c->x_vector.back());
+    resampled_y.push_back(_p2c->y_vector.back());
+    resampled_vd.push_back(_p2c->vd_vector.back());
+    resampled_ori.push_back(_p2c->ori_vector.back());
+
+    // Assign back
+    _p2c->x_vector = resampled_x;
+    _p2c->y_vector = resampled_y;
+    _p2c->vd_vector = resampled_vd;
+    _p2c->ori_vector = resampled_ori;
 }
 
 double pathProcessing::get_desired_velocity(int closest_index){
@@ -175,12 +139,12 @@ double pathProcessing::get_desired_velocity(int closest_index){
     double desired_velocity = _p2c->vd_vector[closest_index];
 
     // the vehicle is slowing down and will stop very soon
-    if (current_velocity <= 0.05 && _p2c->vd_vector.back() <= 0.5){
+    if (current_velocity <= 0.5 && _p2c->vd_vector.back() <= 0.5){
         return 0.0;
     }
 
-    if (current_velocity >= desired_velocity && desired_velocity <= 2.0){
-        // find a velocity from future velocities that is close to the current velocity
+    // find a velocity from future velocities that is close to the current velocity
+    if (current_velocity >= desired_velocity){
         double min_difference = std::numeric_limits<double>::max();
 
         for (size_t i = closest_index; i < _p2c->vd_vector.size(); i++){
@@ -248,34 +212,4 @@ double pathProcessing::get_lateral_error(int closest_index){
     }
 
     return lateral_error;
-}
-
-double pathProcessing::get_slope(int closest_index){
-    // double x = _p2c->x_vector[closest_index];
-    // double y = _p2c->y_vector[closest_index];
-
-    // std::pair<int, int> closest_point;
-    // double min_distance = std::numeric_limits<double>::max();
-    // double closest_slope = 0.0;
-
-    // for (const auto& item : slope_data) {
-    //     // Calculate the distance between (x, y) and the current point in the map
-    //     double distance = std::sqrt(std::pow(item.first.first - x, 2) + std::pow(item.first.second - y, 2));
-
-    //     // Check if this point is the closest one so far
-    //     if (distance < min_distance) {
-    //         min_distance = distance;
-    //         closest_point = item.first;
-    //         closest_slope = item.second;
-    //     }
-    // }
-
-    // // Check if the closest point is within 5 meters
-    // if (min_distance <= 3.0) {
-    //     return closest_slope;
-    // } else {
-    //     RCLCPP_WARN(rclcpp::get_logger("path_process"), "No close enough slope data found for the given coordinates.");
-    //     return 0.0;
-    // }
-    return 0.0;
 }

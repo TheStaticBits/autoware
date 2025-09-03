@@ -30,26 +30,20 @@ public:
         double max_allowed_curvature_,
         double heading_offset_,
         int heading_lookahead_points_,
-        double lateral_offset_,
-        string slope_folder_
+        double lateral_offset_
     );
 
     void run();
-    void process_path(double desired_time_resolution, double preview_time);
+    void resampling();
+
 
 private:
-    void load_slope(string slope_folder);
-    
     void compute_curvature();
-    void upsampling(double desired_time_resolution);
-    void downsampling(double preview_time, double desired_time_resolution);
-
     int get_closest_index();
 
     double get_desired_velocity(int closest_index);
     double get_orientation_error(int closest_index);
     double get_lateral_error(int closest_index);
-    double get_slope(int closest_index);
 
     Plan_Rlt_S * _p2c  = NULL;
     VehState_S * _vs   = NULL;
@@ -61,8 +55,6 @@ private:
     int heading_lookahead_points;
     int values;
     double lateral_offset;
-
-    std::map<std::pair<int, int>, double> slope_data;
 };
 
 #endif // PATHFOLLOWING_HPP
