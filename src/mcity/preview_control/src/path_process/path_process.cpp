@@ -58,13 +58,13 @@ int pathProcessing::get_closest_index(){
     }
 
     // To account for the localization difference between mkz and autoware
-    return closest_index - 10;
+    return closest_index - 5;
 }
 
 void pathProcessing::resampling() {
     std::vector<float> resampled_x, resampled_y, resampled_vd, resampled_ori;
 
-    double desired_spacing = 0.1;  // fixed resampling distance
+    double desired_spacing = 0.2;  // fixed resampling distance
     double dist_since_last = 0.0;  // distance traveled since last resampled point
 
     // Always include the very first waypoint
