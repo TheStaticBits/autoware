@@ -25,7 +25,7 @@ def generate_launch_description():
                     {"speed_ctrl_kp": 1.8},
                     {"speed_ctrl_ki": 0.6},
                     {"heading_offset": -0.03},
-                    {"heading_lookahead_points": 10},
+                    {"heading_lookahead_points": 6},
                     {"lateral_offset": 0.0},
                     {"trajectory_abort_size": 35},
                     {"trajectory_loose_abort_size": 75},
