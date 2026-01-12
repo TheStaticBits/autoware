@@ -72,7 +72,7 @@ namespace preview_control
         cmd_msg.timestamp = this->get_clock()->now().seconds();
         cmd_msg.brake_cmd = _ctrl->brake;
         cmd_msg.throttle_cmd = _ctrl->throttle;
-        cmd_msg.steering_cmd = _ctrl->steering;
+        cmd_msg.steering_cmd = _ctrl->steering * 1.5;
         cmd_msg.gear_cmd = _ctrl->gear;
         cmd_msg.turn_signal_cmd = _ctrl->turn_signal;
 
@@ -105,19 +105,19 @@ namespace preview_control
         }
 
         // we still have some trajectory left but vehicle is already stopped
-        if (static_cast<int>(_p2c->x_vector.size()) < trajectory_loose_abort_size && _vs->speed_x == 0.0){
-            if (stop_count > 100){
-                speedCtrl.set_stop();
-                RCLCPP_WARN_THROTTLE(rclcpp::get_logger("rclcpp"), *get_clock(), 1000, "early stop, shift gear to park");
-                publishCmd();
-                return;
-            } else{
-                stop_count++;
-            }
-        }
-        else{
-            stop_count = 0;
-        }
+        // if (static_cast<int>(_p2c->x_vector.size()) < trajectory_loose_abort_size && _vs->speed_x == 0.0){
+        //     if (stop_count > 100){
+        //         speedCtrl.set_stop();
+        //         RCLCPP_WARN_THROTTLE(rclcpp::get_logger("rclcpp"), *get_clock(), 1000, "early stop, shift gear to park");
+        //         publishCmd();
+        //         return;
+        //     } else{
+        //         stop_count++;
+        //     }
+        // }
+        // else{
+        //     stop_count = 0;
+        // }
 
         // step 2: compute preview control required input
         pathProcess.run();
