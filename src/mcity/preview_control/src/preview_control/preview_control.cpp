@@ -72,7 +72,7 @@ namespace preview_control
         cmd_msg.timestamp = this->get_clock()->now().seconds();
         cmd_msg.brake_cmd = _ctrl->brake;
         cmd_msg.throttle_cmd = _ctrl->throttle;
-        cmd_msg.steering_cmd = _ctrl->steering * 1.5;
+        cmd_msg.steering_cmd = _ctrl->steering * 1.4;
         cmd_msg.gear_cmd = _ctrl->gear;
         cmd_msg.turn_signal_cmd = _ctrl->turn_signal;
 
