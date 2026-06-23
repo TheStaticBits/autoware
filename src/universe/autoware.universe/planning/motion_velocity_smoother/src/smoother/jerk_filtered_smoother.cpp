@@ -115,8 +115,11 @@ bool JerkFilteredSmoother::apply(
   debug_trajectories[1] = resample(backward_filtered);
   debug_trajectories[2] = resample(filtered);
 
-  // Ensure terminal velocity is zero
-  opt_resampled_trajectory.back().longitudinal_velocity_mps = 0.0;
+  // Treat the terminal goal as a stop point only when requested. Real stop points from upstream
+  // modules remain in the trajectory and are still respected below.
+  if (base_param_.stop_at_goal) {
+    opt_resampled_trajectory.back().longitudinal_velocity_mps = 0.0;
+  }
 
   // If Resampled Size is too small, we don't do optimization
   if (opt_resampled_trajectory.size() == 1) {
@@ -134,13 +137,14 @@ bool JerkFilteredSmoother::apply(
   const auto zero_vel_id = motion_utils::searchZeroVelocityIndex(
     opt_resampled_trajectory, 1, opt_resampled_trajectory.size());
 
-  if (!zero_vel_id) {
+  if (base_param_.stop_at_goal && !zero_vel_id) {
     RCLCPP_WARN(logger_, "opt_resampled_trajectory must have stop point.");
     return false;
   }
 
-  // Clip trajectory from 0 to zero_vel_id (the size becomes zero_vel_id_ + 1)
-  const size_t N = *zero_vel_id + 1;
+  // Clip trajectory from 0 to zero_vel_id when a stop point exists. If the terminal goal is not
+  // treated as a stop and there is no upstream stop point, optimize the full trajectory.
+  const size_t N = zero_vel_id ? *zero_vel_id + 1 : opt_resampled_trajectory.size();
 
   output = opt_resampled_trajectory;
 

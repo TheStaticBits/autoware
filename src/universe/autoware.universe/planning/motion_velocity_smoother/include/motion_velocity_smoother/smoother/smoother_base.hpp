@@ -36,6 +36,7 @@ public:
     double max_accel;   // max acceleration in planning [m/s2] > 0
     double min_decel;   // min deceleration in planning [m/s2] < 0
     double stop_decel;  // deceleration at a stop point [m/s2] <= 0
+    bool stop_at_goal;  // set terminal velocity to zero at the final goal point
     double max_jerk;
     double min_jerk;
     double max_lateral_accel;                     // max lateral acceleration [m/ss] > 0

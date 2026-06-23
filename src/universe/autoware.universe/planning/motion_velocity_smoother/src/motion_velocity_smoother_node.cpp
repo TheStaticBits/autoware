@@ -197,6 +197,7 @@ rcl_interfaces::msg::SetParametersResult MotionVelocitySmootherNode::onParameter
     update_param("normal.max_acc", p.max_accel);
     update_param("normal.min_acc", p.min_decel);
     update_param("stop_decel", p.stop_decel);
+    update_param_bool("stop_at_goal", p.stop_at_goal);
     update_param("normal.max_jerk", p.max_jerk);
     update_param("normal.min_jerk", p.min_jerk);
     update_param("max_lateral_accel", p.max_lateral_accel);
@@ -483,8 +484,8 @@ void MotionVelocitySmootherNode::onCurrentTrajectory(const Trajectory::ConstShar
     node_param_.ego_nearest_dist_threshold, node_param_.ego_nearest_yaw_threshold,
     node_param_.post_resample_param, false);
 
-  // Set 0 at the end of the trajectory
-  if (!output_resampled.empty()) {
+  // Set 0 at the end of the trajectory when the goal should be treated as a stop point.
+  if (!output_resampled.empty() && smoother_->getBaseParam().stop_at_goal) {
     output_resampled.back().longitudinal_velocity_mps = 0.0;
   }
 
@@ -605,8 +606,8 @@ bool MotionVelocitySmootherNode::smoothVelocity(
 
   const size_t traj_resampled_closest = findNearestIndexFromEgo(traj_resampled);
 
-  // Set 0[m/s] in the terminal point
-  if (!traj_resampled.empty()) {
+  // Set 0[m/s] in the terminal point when the goal should be treated as a stop point.
+  if (!traj_resampled.empty() && smoother_->getBaseParam().stop_at_goal) {
     traj_resampled.back().longitudinal_velocity_mps = 0.0;
   }
 
@@ -632,7 +633,7 @@ bool MotionVelocitySmootherNode::smoothVelocity(
     traj_smoothed.begin(), traj_resampled.begin(), traj_resampled.begin() + traj_resampled_closest);
 
   // For the endpoint of the trajectory
-  if (!traj_smoothed.empty()) {
+  if (!traj_smoothed.empty() && smoother_->getBaseParam().stop_at_goal) {
     traj_smoothed.back().longitudinal_velocity_mps = 0.0;
   }
 
@@ -683,7 +684,7 @@ void MotionVelocitySmootherNode::insertBehindVelocity(
 {
   const bool keep_closest_vel_for_behind =
     (type == InitializeType::EGO_VELOCITY || type == InitializeType::LARGE_DEVIATION_REPLAN ||
-     type == InitializeType::ENGAGING);
+     type == InitializeType::ENGAGING || !smoother_->getBaseParam().stop_at_goal);
 
   for (size_t i = output_closest - 1; i < output.size(); --i) {
     if (keep_closest_vel_for_behind) {

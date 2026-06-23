@@ -35,6 +35,7 @@ SmootherBase::SmootherBase(rclcpp::Node & node)
   p.max_accel = node.declare_parameter<double>("normal.max_acc");
   p.min_decel = node.declare_parameter<double>("normal.min_acc");
   p.stop_decel = node.declare_parameter<double>("stop_decel");
+  p.stop_at_goal = node.declare_parameter<bool>("stop_at_goal");
   p.max_jerk = node.declare_parameter<double>("normal.max_jerk");
   p.min_jerk = node.declare_parameter<double>("normal.min_jerk");
   p.max_lateral_accel = node.declare_parameter<double>("max_lateral_accel");
