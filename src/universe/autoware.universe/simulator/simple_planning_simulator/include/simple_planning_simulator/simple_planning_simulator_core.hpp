@@ -149,6 +149,7 @@ private:
   rclcpp::Subscription<HADMapBin>::SharedPtr sub_map_;
   rclcpp::Subscription<PoseWithCovarianceStamped>::SharedPtr sub_init_pose_;
   rclcpp::Subscription<TwistStamped>::SharedPtr sub_init_twist_;
+  rclcpp::Subscription<TwistStamped>::SharedPtr sub_current_twist_;
   rclcpp::Subscription<Trajectory>::SharedPtr sub_trajectory_;
   rclcpp::Subscription<Engage>::SharedPtr sub_engage_;
 
@@ -247,6 +248,11 @@ private:
    * @brief set initial twist for simulation with received message
    */
   void on_initialtwist(const TwistStamped::ConstSharedPtr msg);
+
+  /**
+   * @brief set current longitudinal velocity while preserving current pose and orientation
+   */
+  void on_currenttwist(const TwistStamped::ConstSharedPtr msg);
 
   /**
    * @brief set initial pose for simulation with received request

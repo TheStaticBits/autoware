@@ -115,6 +115,8 @@ SimplePlanningSimulator::SimplePlanningSimulator(const rclcpp::NodeOptions & opt
     "input/initialpose", QoS{1}, std::bind(&SimplePlanningSimulator::on_initialpose, this, _1));
   sub_init_twist_ = create_subscription<TwistStamped>(
     "input/initialtwist", QoS{1}, std::bind(&SimplePlanningSimulator::on_initialtwist, this, _1));
+  sub_current_twist_ = create_subscription<TwistStamped>(
+    "input/currenttwist", QoS{1}, std::bind(&SimplePlanningSimulator::on_currenttwist, this, _1));
   sub_ackermann_cmd_ = create_subscription<AckermannControlCommand>(
     "input/ackermann_control_command", QoS{1},
     [this](const AckermannControlCommand::ConstSharedPtr msg) { current_ackermann_cmd_ = *msg; });
@@ -413,6 +415,45 @@ void SimplePlanningSimulator::on_initialtwist(const TwistStamped::ConstSharedPtr
   initial_pose.pose = initial_pose_->pose.pose;
   set_initial_state_with_transform(initial_pose, msg->twist);
   initial_twist_ = *msg;
+}
+
+void SimplePlanningSimulator::on_currenttwist(const TwistStamped::ConstSharedPtr msg)
+{
+  if (!is_initialized_) return;
+
+  const double x = vehicle_model_ptr_->getX();
+  const double y = vehicle_model_ptr_->getY();
+  const double yaw = vehicle_model_ptr_->getYaw();
+  const double vx = msg->twist.linear.x;
+  const double steer = vehicle_model_ptr_->getSteer();
+  const double accx = vehicle_model_ptr_->getAx();
+
+  Eigen::VectorXd state(vehicle_model_ptr_->getDimX());
+  if (vehicle_model_type_ == VehicleModelType::IDEAL_STEER_VEL) {
+    state << x, y, yaw;
+  } else if (
+    vehicle_model_type_ == VehicleModelType::IDEAL_STEER_ACC ||
+    vehicle_model_type_ == VehicleModelType::IDEAL_STEER_ACC_GEARED) {
+    state << x, y, yaw, vx;
+  } else if (vehicle_model_type_ == VehicleModelType::DELAY_STEER_VEL) {
+    state << x, y, yaw, vx, steer;
+  } else if (
+    vehicle_model_type_ == VehicleModelType::DELAY_STEER_ACC ||
+    vehicle_model_type_ == VehicleModelType::DELAY_STEER_ACC_GEARED) {
+    state << x, y, yaw, vx, steer, accx;
+  }
+  vehicle_model_ptr_->setState(state);
+
+  if (
+    vehicle_model_type_ == VehicleModelType::IDEAL_STEER_VEL ||
+    vehicle_model_type_ == VehicleModelType::DELAY_STEER_VEL) {
+    Eigen::VectorXd input(vehicle_model_ptr_->getDimU());
+    vehicle_model_ptr_->getInput(input);
+    input(0) = vx;
+    vehicle_model_ptr_->setInput(input);
+    current_ackermann_cmd_.longitudinal.speed = vx;
+    current_manual_ackermann_cmd_.longitudinal.speed = vx;
+  }
 }
 
 void SimplePlanningSimulator::on_set_pose(
