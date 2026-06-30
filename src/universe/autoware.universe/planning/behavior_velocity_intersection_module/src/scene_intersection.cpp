@@ -929,32 +929,39 @@ IntersectionModule::DecisionResult IntersectionModule::modifyPathVelocityDetail(
   }
 
   // check occlusion on detection lane
-  if (!occlusion_attention_divisions_) {
-    occlusion_attention_divisions_ = util::generateDetectionLaneDivisions(
-      occlusion_attention_lanelets, routing_graph_ptr,
-      planner_data_->occupancy_grid->info.resolution / std::sqrt(2.0));
-  }
-  const auto & occlusion_attention_divisions = occlusion_attention_divisions_.value();
+  bool is_occlusion_cleared = true;
+  if (enable_occlusion_detection_ && !occlusion_attention_lanelets.empty() && !is_prioritized) {
+    if (!planner_data_->occupancy_grid) {
+      RCLCPP_WARN_THROTTLE(
+        logger_, *clock_, 5000,
+        "skip intersection occlusion check because occupancy grid is not available");
+    } else {
+      if (!occlusion_attention_divisions_) {
+        occlusion_attention_divisions_ = util::generateDetectionLaneDivisions(
+          occlusion_attention_lanelets, routing_graph_ptr,
+          planner_data_->occupancy_grid->info.resolution / std::sqrt(2.0));
+      }
+      const auto & occlusion_attention_divisions = occlusion_attention_divisions_.value();
 
-  const double occlusion_dist_thr = std::fabs(
-    std::pow(planner_param_.occlusion.max_vehicle_velocity_for_rss, 2) /
-    (2 * planner_param_.occlusion.min_vehicle_brake_for_rss));
-  std::vector<autoware_auto_perception_msgs::msg::PredictedObject> parked_attention_objects;
-  std::copy_if(
-    target_objects.objects.begin(), target_objects.objects.end(),
-    std::back_inserter(parked_attention_objects),
-    [thresh = planner_param_.occlusion.ignore_parked_vehicle_speed_threshold](const auto & object) {
-      return std::hypot(
-               object.kinematics.initial_twist_with_covariance.twist.linear.x,
-               object.kinematics.initial_twist_with_covariance.twist.linear.y) <= thresh;
-    });
-  const bool is_occlusion_cleared =
-    (enable_occlusion_detection_ && !occlusion_attention_lanelets.empty() && !is_prioritized)
-      ? isOcclusionCleared(
-          *planner_data_->occupancy_grid, occlusion_attention_area, adjacent_lanelets,
-          first_attention_area, interpolated_path_info, occlusion_attention_divisions,
-          parked_attention_objects, occlusion_dist_thr)
-      : true;
+      const double occlusion_dist_thr = std::fabs(
+        std::pow(planner_param_.occlusion.max_vehicle_velocity_for_rss, 2) /
+        (2 * planner_param_.occlusion.min_vehicle_brake_for_rss));
+      std::vector<autoware_auto_perception_msgs::msg::PredictedObject> parked_attention_objects;
+      std::copy_if(
+        target_objects.objects.begin(), target_objects.objects.end(),
+        std::back_inserter(parked_attention_objects),
+        [thresh = planner_param_.occlusion.ignore_parked_vehicle_speed_threshold](
+          const auto & object) {
+          return std::hypot(
+                   object.kinematics.initial_twist_with_covariance.twist.linear.x,
+                   object.kinematics.initial_twist_with_covariance.twist.linear.y) <= thresh;
+        });
+      is_occlusion_cleared = isOcclusionCleared(
+        *planner_data_->occupancy_grid, occlusion_attention_area, adjacent_lanelets,
+        first_attention_area, interpolated_path_info, occlusion_attention_divisions,
+        parked_attention_objects, occlusion_dist_thr);
+    }
+  }
   occlusion_stop_state_machine_.setStateWithMarginTime(
     is_occlusion_cleared ? StateMachine::State::GO : StateMachine::STOP,
     logger_.get_child("occlusion_stop"), *clock_);
